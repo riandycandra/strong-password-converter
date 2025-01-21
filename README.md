@@ -28,12 +28,12 @@ git clone https://github.com/riandycandra/strong-password-converter.git
 cd password-converter
 ```
 
-1. Build and run with Docker:
+2. Build and run with Docker:
 ```bash
 docker build -t password-gen . && docker run -dp 3000:3000 password-gen
 ```
 
-1. Access the application at `http://localhost:3000`
+3. Access the application at `http://localhost:3000`
 
 ### Manual Setup
 
