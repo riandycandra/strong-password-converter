@@ -3,31 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Password Converter</title>
+    <title>Password Converter</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-        input, textarea, button {
-            display: block;
-            margin-bottom: 10px;
-            padding: 8px;
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mapping-item {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .symbol-settings {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        input[type="text"], input[type="number"] {
             width: 100%;
+            padding: 8px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            text-align: center;
+            width: 80%;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        .settings-group {
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <h1>Enhanced String to Strong Password Converter</h1>
-    <label for="inputString">Enter your string:</label>
-    <textarea id="inputString" onkeydown="convertToPassword()" rows="3"></textarea>
+    <div class="container">
+        <h1>Password Converter</h1>
 
-    <h2>Generated Password:</h2>
-    <p id="outputPassword" style="font-weight: bold; color: green;"></p>
+        <div style="text-align: center;">
+            <label for="inputText">Enter text to convert:</label>
+            <input type="text" style="text-align: center; width: 80%;" id="inputText" onkeydown="convertPassword()" placeholder="Enter text..." value="this is example of password">
+        </div>
+    
+        
+        <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+            <div id="result">Converted password will appear here</div>
+        </div>
+        
+        <div class="symbol-settings">
+            <h3>Symbol Settings</h3>
+            <div class="settings-group">
+                <label for="symbols">Available Symbols:</label>
+                <input type="text" id="symbols" value="!@#$%^&*()_+-=[]{}|;:,.?" title="Symbols to use">
+            </div>
+            <div class="settings-group">
+                <label for="minSymbols">Minimum Symbols to Add:</label>
+                <input type="number" id="minSymbols" value="2" min="0" max="10">
+            </div>
+            <div class="settings-group">
+                <label for="maxSymbols">Maximum Symbols to Add:</label>
+                <input type="number" id="maxSymbols" value="4" min="0" max="10">
+            </div>
+        </div>
+
+        <div class="mapping-grid" id="mappingGrid"></div>
+    </div>
 
     <script>
-        // Custom mapping for each character
-        const charMap = {
+        // Default character mappings
+        const defaultMappings = {
             'a': ['a', 'A', '4', '@'],
             'b': ['b', 'B', '8'],
             'c': ['c', 'C'],
@@ -39,52 +114,91 @@
             'i': ['i', 'I', '1', '!'],
             'j': ['j', 'J'],
             'k': ['k', 'K'],
-            'l': ['l', 'L', '1', '!'],
+            'l': ['l', 'L', '1'],
             'm': ['m', 'M'],
             'n': ['n', 'N'],
             'o': ['o', 'O', '0'],
             'p': ['p', 'P'],
             'q': ['q', 'Q'],
             'r': ['r', 'R'],
-            's': ['s', 'S', '$'],
+            's': ['s', 'S', '5', '$'],
             't': ['t', 'T', '7'],
             'u': ['u', 'U'],
             'v': ['v', 'V'],
             'w': ['w', 'W'],
             'x': ['x', 'X'],
             'y': ['y', 'Y'],
-            'z': ['z', 'Z']
+            'z': ['z', 'Z', '2']
         };
 
-        // List of random symbols to insert
-        const symbols = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'];
+        // Create mapping input fields
+        const mappingGrid = document.getElementById('mappingGrid');
+        for (const [letter, mappings] of Object.entries(defaultMappings)) {
+            const div = document.createElement('div');
+            div.className = 'mapping-item';
+            div.innerHTML = `
+                <label for="mapping-${letter}">${letter.toUpperCase()}:</label>
+                <input type="text" id="mapping-${letter}" 
+                       value="${mappings.join(',')}" 
+                       title="Enter comma-separated values">
+            `;
+            mappingGrid.appendChild(div);
+        }
 
-        // Function to convert string to a strong password
-        function convertToPassword() {
-            const inputString = document.getElementById('inputString').value;
-            let password = '';
+        function getMappings() {
+            const mappings = {};
+            for (const letter of Object.keys(defaultMappings)) {
+                const input = document.getElementById(`mapping-${letter}`);
+                mappings[letter] = input.value.split(',').map(v => v.trim()).filter(v => v);
+            }
+            return mappings;
+        }
 
-            // Step 1: Convert characters based on mapping
-            for (let char of inputString) {
-                if (charMap[char.toLowerCase()]) {
-                    const replacements = charMap[char.toLowerCase()];
-                    password += replacements[Math.floor(Math.random() * replacements.length)];
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function insertRandomSymbols(text) {
+            const symbols = document.getElementById('symbols').value.split('');
+            const minSymbols = parseInt(document.getElementById('minSymbols').value);
+            const maxSymbols = parseInt(document.getElementById('maxSymbols').value);
+            
+            // Determine how many symbols to insert
+            const numSymbols = getRandomInt(minSymbols, maxSymbols);
+            
+            let result = text;
+            for (let i = 0; i < numSymbols; i++) {
+                const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const position = Math.floor(Math.random() * (result.length + 1));
+                result = result.slice(0, position) + randomSymbol + result.slice(position);
+            }
+            
+            return result;
+        }
+
+        function convertPassword() {
+            const input = document.getElementById('inputText').value;
+            const mappings = getMappings();
+            let result = '';
+
+            // First, convert characters based on mappings
+            for (const char of input.toLowerCase()) {
+                if (mappings[char]) {
+                    const options = mappings[char];
+                    result += options[Math.floor(Math.random() * options.length)];
                 } else {
-                    password += char; // Keep non-alphabetic characters as they are
+                    result += char;
                 }
             }
 
-            // Step 2: Insert random symbols
-            const numSymbols = Math.floor(Math.random() * 4) + 1; // Insert 1-4 symbols
-            for (let i = 0; i < numSymbols; i++) {
-                const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
-                const insertPosition = Math.floor(Math.random() * (password.length + 1));
-                password = password.slice(0, insertPosition) + randomSymbol + password.slice(insertPosition);
-            }
+            // Then insert random symbols
+            result = insertRandomSymbols(result);
 
-            // Output the final password
-            document.getElementById('outputPassword').textContent = password;
+            document.getElementById('result').textContent = result;
         }
+
+        // Initial conversion
+        convertPassword();
     </script>
 </body>
 </html>
