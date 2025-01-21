@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Password Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, textarea, button {
+            display: block;
+            margin-bottom: 10px;
+            padding: 8px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enhanced String to Strong Password Converter</h1>
+    <label for="inputString">Enter your string:</label>
+    <textarea id="inputString" onkeydown="convertToPassword()" rows="3"></textarea>
+
+    <h2>Generated Password:</h2>
+    <p id="outputPassword" style="font-weight: bold; color: green;"></p>
+
+    <script>
+        // Custom mapping for each character
+        const charMap = {
+            'a': ['a', 'A', '4', '@'],
+            'b': ['b', 'B', '8'],
+            'c': ['c', 'C'],
+            'd': ['d', 'D'],
+            'e': ['e', 'E', '3'],
+            'f': ['f', 'F'],
+            'g': ['g', 'G', '9'],
+            'h': ['h', 'H'],
+            'i': ['i', 'I', '1', '!'],
+            'j': ['j', 'J'],
+            'k': ['k', 'K'],
+            'l': ['l', 'L', '1', '!'],
+            'm': ['m', 'M'],
+            'n': ['n', 'N'],
+            'o': ['o', 'O', '0'],
+            'p': ['p', 'P'],
+            'q': ['q', 'Q'],
+            'r': ['r', 'R'],
+            's': ['s', 'S', '$'],
+            't': ['t', 'T', '7'],
+            'u': ['u', 'U'],
+            'v': ['v', 'V'],
+            'w': ['w', 'W'],
+            'x': ['x', 'X'],
+            'y': ['y', 'Y'],
+            'z': ['z', 'Z']
+        };
+
+        // List of random symbols to insert
+        const symbols = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'];
+
+        // Function to convert string to a strong password
+        function convertToPassword() {
+            const inputString = document.getElementById('inputString').value;
+            let password = '';
+
+            // Step 1: Convert characters based on mapping
+            for (let char of inputString) {
+                if (charMap[char.toLowerCase()]) {
+                    const replacements = charMap[char.toLowerCase()];
+                    password += replacements[Math.floor(Math.random() * replacements.length)];
+                } else {
+                    password += char; // Keep non-alphabetic characters as they are
+                }
+            }
+
+            // Step 2: Insert random symbols
+            const numSymbols = Math.floor(Math.random() * 4) + 1; // Insert 1-4 symbols
+            for (let i = 0; i < numSymbols; i++) {
+                const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+                const insertPosition = Math.floor(Math.random() * (password.length + 1));
+                password = password.slice(0, insertPosition) + randomSymbol + password.slice(insertPosition);
+            }
+
+            // Output the final password
+            document.getElementById('outputPassword').textContent = password;
+        }
+    </script>
+</body>
+</html>
